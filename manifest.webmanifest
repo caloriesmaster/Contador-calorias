@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Contador de calorías",
+  "short_name": "Contador",
+  "description": "Contador personal de calorías, proteína y sal",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#2f7d5b",
+  "icons": [
+    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
+}

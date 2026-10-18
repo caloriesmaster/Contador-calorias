@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f7d5b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Contador">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Contador calorías</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1f2a24; --muted:#6b756f; --line:#e4e0d6;
+  --accent:#2f7d5b; --accent-ink:#fff; --btn:#2b2b2b; --btn-ink:#fff; --cal:#d9622b; --pro:#2f7d5b; --sal:#4a6fa5; --danger:#b3382c;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161a18; --card:#1f2522; --ink:#e8ede9; --muted:#97a39c; --line:#2f3733;
+        --accent:#4fb283; --accent-ink:#0e1a14; --btn:#e4e4e4; --btn-ink:#161616; --cal:#f08a55; --pro:#4fb283; --sal:#7fa3d8; --danger:#ef7b6e;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:4px 0 14px}
+h1{font-size:20px;margin:0}
+#fecha{color:var(--muted);font-size:14px}
+#fecha::first-letter{text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.totales{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;text-align:center}
+.tot .n{font-size:30px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tot.cal .n{color:var(--cal);font-size:38px}
+.tot.pro .n{color:var(--pro)} .tot.sal .n{color:var(--sal)}
+.tot .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tot .u{font-size:13px;color:var(--muted);font-weight:400}
+label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+input,button,select{font:inherit}
+input[type=text],input[type=number]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+input:focus{outline:2px solid var(--accent);outline-offset:0}
+.form{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:end}
+.pick{position:relative}
+#lista{position:absolute;left:0;right:0;top:100%;z-index:5;max-height:260px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:none}
+#lista div{padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+#lista div.sel,#lista div:hover{background:var(--bg)}
+#lista small{color:var(--muted)}
+.qty{position:relative}
+.qty span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.qty input{padding-right:40px}
+#prev{grid-column:1/-1;font-size:14px;color:var(--muted);min-height:20px}
+#prev b{color:var(--ink)}
+.btn{border:0;border-radius:10px;padding:12px 16px;background:var(--btn);color:var(--btn-ink);font-weight:600;cursor:pointer;grid-column:1/-1}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:transparent;color:var(--muted);border:1px solid var(--line);grid-column:auto;font-weight:500;padding:8px 12px;font-size:14px}
+.btn.danger{color:var(--danger)}
+.btn.dark{background:var(--btn);color:var(--btn-ink);border:0}
+#confirmBox{display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px;font-size:14px}
+#confirmBox span{color:var(--muted)}
+#cMsg{color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px}
+.hist details{border-top:1px solid var(--line);padding:8px 0}
+.hist details:first-of-type{border-top:0}
+.hist summary{display:flex;width:100%;justify-content:space-between;gap:8px;font-size:14px;color:var(--ink);list-style:none}
+.hist summary::-webkit-details-marker{display:none}
+.hist summary::before{content:"▸";color:var(--muted);margin-right:6px}
+.hist details[open] summary::before{content:"▾"}
+.hist summary .tt{margin-left:auto;font-variant-numeric:tabular-nums}
+.hist ul{list-style:none;margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:13px}
+.hist ul li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.hist .none{color:var(--muted);text-align:center;padding:10px 0;font-size:14px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:right;padding:0 6px 8px;font-weight:600}
+th:first-child{text-align:left}
+td{padding:9px 6px;border-top:1px solid var(--line);text-align:right;font-size:15px}
+td:first-child{text-align:left}
+td .q{width:70px;padding:5px 6px;text-align:right;font-size:14px}
+td .x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px}
+td .x:hover{color:var(--danger)}
+.vacio{color:var(--muted);text-align:center;padding:18px 0}
+.acciones{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+h2{font-size:14px;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hist div{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
+.hist div:first-of-type{border-top:0}
+.hist span.m{color:var(--muted)}
+details summary{cursor:pointer;color:var(--muted);font-size:14px}
+.cust{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-top:12px;align-items:end}
+.cust .btn{grid-column:1/-1}
+@media (max-width:480px){
+  .form{grid-template-columns:1fr 110px}
+  .tot .n{font-size:24px} .tot.cal .n{font-size:30px}
+  th.h-opt,td.opt{display:none}
+  .cust{grid-template-columns:1fr 1fr}
+  .cust .name{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="warn" style="display:none;background:#fff3cd;color:#5c4400;border:1px solid #e6c65c;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px">
+    ⚠️ <b>Este navegador no está guardando los datos.</b> Lo que registres se perderá al cerrar o recargar la página. Ábrelo en el navegador normal (Safari/Chrome, no en modo privado ni desde una vista previa del correo o de Archivos) y usa «Descargar copia» para no perder nada.
+  </div>
+  <header>
+    <h1>Contador calorías 🥑</h1>
+    <div id="fecha"></div>
+  </header>
+
+  <section class="card">
+    <div class="totales">
+      <div class="tot cal"><div class="n" id="tCal">0</div><div class="l">Calorías <span class="u">kcal</span></div></div>
+      <div class="tot pro"><div class="n" id="tPro">0</div><div class="l">Proteína <span class="u">g</span></div></div>
+      <div class="tot sal"><div class="n" id="tSal">0</div><div class="l">Sal <span class="u">g</span></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="form">
+      <div class="pick">
+        <label for="buscar">Alimento</label>
+        <input type="text" id="buscar" placeholder="Escribe para buscar…" autocomplete="off">
+        <div id="lista"></div>
+      </div>
+      <div class="qty">
+        <label for="cant" id="cantLbl">Cantidad</label>
+        <input type="number" id="cant" min="0" step="any" inputmode="decimal" placeholder="0">
+        <span id="unidad">g</span>
+      </div>
+      <div id="prev"></div>
+      <button class="btn" id="add" disabled>Añadir</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Registro de hoy</h2>
+    <table>
+      <thead><tr><th>Alimento</th><th>Cant.</th><th>Cal</th><th class="h-opt">Prot</th><th class="h-opt">Sal</th><th></th></tr></thead>
+      <tbody id="filas"></tbody>
+    </table>
+    <div class="acciones">
+      <button class="btn sec" id="deshacer">↩ Deshacer último</button>
+      <button class="btn sec danger" id="reset">Empezar nuevo día</button>
+    </div>
+    <div id="confirmBox"><span>¿Borrar el registro de hoy?</span>
+      <button class="btn sec dark" id="rYes">Sí, empezar nuevo día</button>
+      <button class="btn sec" id="rNo">Cancelar</button></div>
+  </section>
+
+
+  <section class="card">
+    <details>
+      <summary>Añadir un alimento nuevo a la lista</summary>
+      <div class="cust">
+        <div class="name"><label>Nombre</label><input type="text" id="cNom" placeholder="Ej: Yogur (ud)"></div>
+        <div><label>Cal /100</label><input type="number" id="cCal" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Prot /100</label><input type="number" id="cPro" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Sal /100</label><input type="number" id="cSal" min="0" step="any" inputmode="decimal"></div>
+        <button class="btn" id="cAdd">Guardar alimento</button>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Valores por 100 g, como en tu Excel. Si el nombre incluye “(ud)”, la cantidad se cuenta en unidades y los valores son por unidad × 100.</p>
+      <p id="cMsg"></p>
+    </details>
+    <details style="margin-top:12px">
+      <summary>Editar o eliminar un alimento</summary>
+      <div class="cust" style="grid-template-columns:1fr;margin-top:12px">
+        <div><label>Alimento</label><select id="eSel" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)"></select></div>
+      </div>
+      <div class="cust" id="eForm" style="display:none">
+        <div class="name"><label>Nombre</label><input type="text" id="eNom"></div>
+        <div><label>Cal /100</label><input type="number" id="eCal" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Prot /100</label><input type="number" id="ePro" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Sal /100</label><input type="number" id="eSal" min="0" step="any" inputmode="decimal"></div>
+        <button class="btn" id="eSave">Guardar cambios</button>
+        <button class="btn sec danger" id="eDel" style="grid-column:1/-1">Eliminar este alimento</button>
+        <div id="eConfirm" style="display:none;grid-column:1/-1;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+          <span style="color:var(--muted)">¿Eliminar este alimento de la lista?</span>
+          <button class="btn sec dark" id="eYes">Sí, eliminar</button>
+          <button class="btn sec" id="eNo">Cancelar</button>
+        </div>
+        <button class="btn sec" id="eRestore" style="display:none;grid-column:1/-1">Restaurar valores originales de este alimento</button>
+      </div>
+      <p id="eMsg" style="color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px"></p>
+      <button class="btn sec" id="eRestoreAll" style="display:none">Restaurar alimentos eliminados</button>
+    </details>
+    <details style="margin-top:12px">
+      <summary>Copia de seguridad</summary>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0">Los datos se guardan solo en este navegador. Descarga una copia de vez en cuando y, si algún día se borran, restáurala aquí.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sec" id="bDown">⬇ Descargar copia</button>
+        <button class="btn sec" id="bUp">⬆ Restaurar copia</button>
+        <input type="file" id="bFile" accept=".json,application/json" style="display:none">
+      </div>
+      <p id="bMsg" style="color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px"></p>
+    </details>
+    <p id="saved" style="color:var(--muted);font-size:12px;margin:12px 0 0"></p>
+  </section>
+</div>
+
+<script>
+const FOODS_BASE = [["Aceite de oliva virgen extra 🫒", 900.0, 0.0, 0.0], ["Almendra natural 🥜", 640.0, 25.2, 0.02], ["Alubia blanca 🫘", 292.0, 21.4, 0.03], ["Anacardo tostado 🥜", 601.0, 21.0, 0.08], ["Arroz integral 🌾", 350.0, 7.6, 0.0], ["Arroz redondo 🌾", 344.0, 8.2, 0.0], ["Azúcar 🍫", 400.0, 0.0, 0.0], ["Banana 🍌", 90.0, 1.2, 0.0], ["Bebida de soja 🥛", 32.0, 3.1, 0.1], ["Boniato 🍠", 101.0, 1.2, 0.05], ["Brócoli 🥦", 29.0, 3.0, 0.03], ["Canónigos 🍃", 14.0, 1.8, 0.1], ["Cebolla 🧅", 40.0, 1.2, 0.0], ["Ciruelas secas 🍇", 240.0, 2.2, 0.0], ["Crema de cacahuete 🥜", 608.0, 30.0, 0.0], ["Dátiles 🍇", 296.0, 2.2, 0.0], ["Espinaca fresca 🍃", 22.0, 2.7, 0.14], ["Garbanzos 🫘", 348.0, 18.6, 0.07], ["Gotas de chocolate 🍫", 501.0, 6.0, 0.02], ["Guisantes 🫘", 82.0, 6.0, 0.01], ["Harina de avena 🌾", 384.0, 12.2, 0.0], ["Higos secos", 310.0, 3.2, 0.0], ["Huevos 🥚", 150.0, 12.5, 0.35], ["Kéfir 🥛", 74.0, 3.9, 0.08], ["Lentejas 🫘", 320.0, 24.5, 0.05], ["Lata atún al natural (ud) 🐟", 6100.0, 1400.0, 72.0], ["Lata atún en aceite (ud) 🐟🫒", 28400.0, 1400.0, 72.0], ["Lata atún en aceite escurrido (ud) 🐟🫒", 15300.0, 1300.0, 72.0], ["Maíz (de lata sin la sal) 🌽", 75.0, 2.6, 0.0], ["Manzana 🍎", 50.0, 0.3, 0.0], ["Merluza congelada 🐟", 82.0, 18.0, 0.24], ["Naranja 🍊", 38.0, 0.8, 0.0], ["Nueces 🥜", 709.0, 18.0, 0.0], ["Pasta lentejas 🌾", 334.0, 26.0, 0.0], ["Pasta integral 🌾", 345.0, 13.5, 0.01], ["Patata 🥔", 75.0, 2.2, 0.01], ["Pimiento rojo 🍅", 29.0, 1.3, 0.0], ["Piña 🍍", 49.0, 0.5, 0.0], ["Pera 🍐", 45.0, 0.4, 0.0], ["Queso fresco batido 🥛", 46.0, 8.0, 0.1], ["Salmón 🐟", 223.0, 20.0, 0.1], ["Salteado de verduras 🥦", 31.0, 2.0, 0.02], ["Sal yodada 🧂", 0.0, 0.0, 100.0], ["Semillas de sésamo 🫘", 575.0, 17.0, 0.1], ["Soja texturizada (portugal) 🫘", 318.0, 51.5, 0.01], ["Tomate pera 🍅", 19.0, 0.9, 0.0], ["Tortilla de avena (ud) 🍞", 17200.0, 910.0, 80.0], ["Tortitas de legumbres (ud) 🍞", 10000.0, 680.0, 46.0], ["Uvas pasas 🍇", 324.0, 3.1, 0.0], ["Zanahoria 🥕", 34.0, 0.8, 0.18], ["Pechuga de pollo entera 🍗", 106.0, 22.0, 0.16], ["Añadir calorías ➕", 100.0, 0.0, 0.0], ["Añadir proteína ➕", 0.0, 100.0, 0.0], ["Añadir sal ➕", 0.0, 0.0, 100.0]];   // [nombre, cal, prot, sal] por 100 g, de tu Excel
+const KEY = 'contadorCalorias.v1';
+
+const $ = id => document.getElementById(id);
+const hoy = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const fmt = (n,d=0) => (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:d});
+const esUd = n => /\(ud\)/i.test(n);
+const sinEmoji = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+let state = { date: hoy(), entries: [], custom: [], edits: {}, deleted: [] };
+function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.entries) state=Object.assign(state,s); }catch(e){} delete state.history; }
+let storageOK = true;
+function save(){
+  state.saved = Date.now();
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); storageOK = localStorage.getItem(KEY) !== null; }catch(e){ storageOK=false; }
+  showSaved();
+}
+function showSaved(){
+  $('warn').style.display = storageOK ? 'none' : 'block';
+  $('saved').textContent = storageOK && state.saved ? 'Guardado automáticamente en este navegador · última vez a las '+new Date(state.saved).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+}
+try{ localStorage.setItem(KEY+'.test','1'); localStorage.removeItem(KEY+'.test'); }catch(e){ storageOK=false; }
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+// cada alimento: [nombre, cal, prot, sal, origen('b'|'c'), clave]
+const allFoods = () => FOODS_BASE.filter(f=>!state.deleted.includes(f[0]))
+  .map(f=>{ const e=state.edits[f[0]]; return (e||f.slice(0,4)).concat(['b',f[0]]); })
+  .concat(state.custom.map(f=>f.slice(0,4).concat(['c',f[0]])))
+  .sort((a,b)=>a[0].localeCompare(b[0],'es'));
+
+function archiveDay(){
+  state.entries = [];
+}
+// --- cambio de día automático ---
+function checkDay(){
+  const h = hoy();
+  if(state.date !== h){
+    archiveDay(); state.date = h; save(); render();
+  }
+}
+
+const calc = e => ({cal:e.p[0]*e.q/100, pro:e.p[1]*e.q/100, sal:e.p[2]*e.q/100});
+function totals(){ return state.entries.reduce((a,e)=>{const c=calc(e);a.cal+=c.cal;a.pro+=c.pro;a.sal+=c.sal;return a},{cal:0,pro:0,sal:0}); }
+
+// --- selector de alimento ---
+let sel = null, matches = [], idx = -1;
+function showList(){
+  const q = sinEmoji($('buscar').value.trim());
+  matches = allFoods().filter(f=>sinEmoji(f[0]).includes(q));
+  const box = $('lista');
+  if(!matches.length){ box.style.display='none'; return; }
+  idx = matches.length && q ? 0 : -1;
+  box.innerHTML = matches.map((f,i)=>`<div data-i="${i}" class="${i===idx?'sel':''}">${esc(f[0])}<small>${fmt(f[1])} kcal</small></div>`).join('');
+  box.style.display='block';
+}
+function esc(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function choose(i){
+  sel = matches[i]; $('buscar').value = sel[0]; $('lista').style.display='none';
+  const ud = esUd(sel[0]); $('unidad').textContent = ud?'ud':'g'; $('cant').focus(); $('cant').select(); upd();
+}
+function upd(){
+  const q = parseFloat($('cant').value);
+  const ok = sel && q>=0 && !isNaN(q) && $('cant').value!=='';
+  $('add').disabled = !ok;
+  $('prev').innerHTML = ok ? `<b>${fmt(sel[1]*q/100,1)}</b> kcal · ${fmt(sel[2]*q/100,1)} g prot · ${fmt(sel[3]*q/100,2)} g sal` : (sel?'':'');
+}
+$('buscar').addEventListener('input',()=>{ sel=null; showList(); upd(); });
+$('buscar').addEventListener('focus',showList);
+$('buscar').addEventListener('keydown',e=>{
+  const box=$('lista');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); if(!matches.length)return; idx=(idx+(e.key==='ArrowDown'?1:-1)+matches.length)%matches.length;
+    [...box.children].forEach((c,i)=>c.classList.toggle('sel',i===idx)); box.children[idx].scrollIntoView({block:'nearest'}); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(idx>=0) choose(idx); }
+  else if(e.key==='Escape'){ box.style.display='none'; }
+});
+$('lista').addEventListener('mousedown',e=>{ const d=e.target.closest('div[data-i]'); if(d){ e.preventDefault(); choose(+d.dataset.i); } });
+document.addEventListener('click',e=>{ if(!e.target.closest('.pick')) $('lista').style.display='none'; });
+$('cant').addEventListener('input',upd);
+$('cant').addEventListener('keydown',e=>{ if(e.key==='Enter') addEntry(); });
+$('add').addEventListener('click',addEntry);
+
+function addEntry(){
+  if($('add').disabled) return;
+  state.entries.push({id:Date.now()+Math.random(), name:sel[0], p:[sel[1],sel[2],sel[3]], q:parseFloat($('cant').value)});
+  save(); sel=null; $('buscar').value=''; $('cant').value=''; $('unidad').textContent='g'; upd(); render(); $('buscar').focus();
+}
+
+// --- render ---
+function render(){
+  $('fecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const t = totals();
+  $('tCal').textContent = fmt(t.cal); $('tPro').textContent = fmt(t.pro,1); $('tSal').textContent = fmt(t.sal,2);
+  const tb = $('filas');
+  if(!state.entries.length) tb.innerHTML = '<tr><td colspan="6" class="vacio">Aún no has añadido nada hoy</td></tr>';
+  else tb.innerHTML = state.entries.map(e=>{ const c=calc(e); return `<tr>
+    <td>${esc(e.name)}</td>
+    <td><input class="q" type="number" min="0" step="any" value="${e.q}" data-id="${e.id}"></td>
+    <td>${fmt(c.cal)}</td><td class="opt">${fmt(c.pro,1)}</td><td class="opt">${fmt(c.sal,2)}</td>
+    <td><button class="x" data-del="${e.id}" title="Quitar" aria-label="Quitar">×</button></td></tr>`; }).join('');
+  $('deshacer').disabled = !state.entries.length;
+}
+$('filas').addEventListener('click',e=>{ const id=e.target.dataset.del; if(id){ state.entries=state.entries.filter(x=>String(x.id)!==id); save(); render(); } });
+$('filas').addEventListener('change',e=>{
+  if(!e.target.classList.contains('q')) return;
+  const v=parseFloat(e.target.value); const en=state.entries.find(x=>String(x.id)===e.target.dataset.id);
+  if(en && v>=0) { en.q=v; save(); } render();
+});
+$('deshacer').addEventListener('click',()=>{ state.entries.pop(); save(); render(); });
+let rTimer=null;
+function rClose(){ $('confirmBox').style.display='none'; clearTimeout(rTimer); }
+$('reset').addEventListener('click',()=>{ $('confirmBox').style.display='flex'; clearTimeout(rTimer); rTimer=setTimeout(rClose,8000); });
+$('rNo').addEventListener('click',rClose);
+$('rYes').addEventListener('click',()=>{ rClose(); archiveDay(); state.date=hoy(); save(); render(); });
+
+// --- alimento personalizado ---
+$('cAdd').addEventListener('click',()=>{
+  const n=$('cNom').value.trim(); if(!n){ $('cNom').focus(); return; }
+  const v=id=>Math.max(0,parseFloat($(id).value)||0);
+  state.custom = state.custom.filter(f=>f[0]!==n); state.custom.push([n,v('cCal'),v('cPro'),v('cSal')]); save();
+  ['cNom','cCal','cPro','cSal'].forEach(i=>$(i).value=''); eRefresh(); $('cMsg').textContent='Guardado: '+n; setTimeout(()=>{$('cMsg').textContent=''},3000);
+});
+
+// --- editar / eliminar alimento ---
+let eList=[], eCur=null;
+function eMsg(m){ $('eMsg').textContent=m; setTimeout(()=>{ if($('eMsg').textContent===m) $('eMsg').textContent=''; },3000); }
+function eRefresh(keepKey){
+  eList = allFoods();
+  $('eSel').innerHTML = '<option value="">Elige un alimento…</option>' + eList.map((f,i)=>`<option value="${i}">${esc(f[0])}</option>`).join('');
+  eCur=null; $('eForm').style.display='none'; $('eConfirm').style.display='none'; $('eDel').style.display='';
+  $('eRestoreAll').style.display = state.deleted.length ? '' : 'none';
+  $('eRestoreAll').textContent = 'Restaurar alimentos eliminados ('+state.deleted.length+')';
+  if(sel){ sel=null; $('buscar').value=''; upd(); }
+}
+$('eSel').addEventListener('change',()=>{
+  const i=$('eSel').value; $('eConfirm').style.display='none'; $('eDel').style.display='';
+  if(i===''){ eCur=null; $('eForm').style.display='none'; return; }
+  eCur=eList[+i]; $('eForm').style.display='grid';
+  $('eNom').value=eCur[0]; $('eCal').value=eCur[1]; $('ePro').value=eCur[2]; $('eSal').value=eCur[3];
+  $('eRestore').style.display = (eCur[4]==='b' && state.edits[eCur[5]]) ? '' : 'none';
+});
+$('eSave').addEventListener('click',()=>{
+  if(!eCur) return; const n=$('eNom').value.trim(); if(!n){ $('eNom').focus(); return; }
+  const v=id=>Math.max(0,parseFloat($(id).value)||0); const nf=[n,v('eCal'),v('ePro'),v('eSal')];
+  if(eCur[4]==='b') state.edits[eCur[5]]=nf;
+  else { const k=state.custom.findIndex(f=>f[0]===eCur[5]); if(k>=0) state.custom[k]=nf; }
+  save(); eRefresh(); eMsg('Cambios guardados: '+n);
+});
+$('eDel').addEventListener('click',()=>{ if(eCur){ $('eConfirm').style.display='flex'; $('eDel').style.display='none'; } });
+$('eNo').addEventListener('click',()=>{ $('eConfirm').style.display='none'; $('eDel').style.display=''; });
+$('eYes').addEventListener('click',()=>{
+  if(!eCur) return; const n=eCur[0];
+  if(eCur[4]==='b'){ if(!state.deleted.includes(eCur[5])) state.deleted.push(eCur[5]); delete state.edits[eCur[5]]; }
+  else state.custom = state.custom.filter(f=>f[0]!==eCur[5]);
+  save(); eRefresh(); eMsg('Eliminado: '+n);
+});
+$('eRestore').addEventListener('click',()=>{ if(eCur && eCur[4]==='b'){ delete state.edits[eCur[5]]; save(); eRefresh(); eMsg('Valores originales restaurados'); } });
+$('eRestoreAll').addEventListener('click',()=>{ state.deleted=[]; save(); eRefresh(); eMsg('Alimentos restaurados'); });
+
+// --- copia de seguridad ---
+function bMsg(m){ $('bMsg').textContent=m; setTimeout(()=>{ if($('bMsg').textContent===m) $('bMsg').textContent=''; },4000); }
+$('bDown').addEventListener('click',()=>{
+  const blob = new Blob([JSON.stringify({app:'contador-calorias',v:1,state})],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'copia-contador-calorias-'+hoy()+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  bMsg('Copia descargada.');
+});
+$('bUp').addEventListener('click',()=>$('bFile').click());
+$('bFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const s=JSON.parse(r.result).state; if(!s||!Array.isArray(s.entries)) throw 0;
+    state=Object.assign({ date: hoy(), entries: [], custom: [], edits: {}, deleted: [] }, s); delete state.history;
+    checkDay(); save(); render(); eRefresh(); bMsg('Copia restaurada.');
+  }catch(err){ bMsg('Ese archivo no es una copia válida.'); } e.target.value=''; };
+  r.readAsText(f);
+});
+
+load(); checkDay(); render(); eRefresh(); showSaved();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkDay(); });
+setInterval(checkDay,60000);
+</script>
+<script>
+// Registra el service worker cuando la app se sirve desde HTTPS o localhost.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
