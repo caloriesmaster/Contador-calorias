@@ -81,6 +81,13 @@ h2{font-size:14px;margin:0 0 10px;color:var(--muted);text-transform:uppercase;le
 .hist div:first-of-type{border-top:0}
 .hist span.m{color:var(--muted)}
 details summary{cursor:pointer;color:var(--muted);font-size:14px}
+#notas{width:100%;min-height:110px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical}
+#notas:focus{outline:2px solid var(--accent);outline-offset:0}
+.micros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.micros label{font-size:11px}
+.mtot{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;text-align:center}
+.mtot .n{font-size:20px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.mtot .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .cust{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-top:12px;align-items:end}
 .cust .btn{grid-column:1/-1}
 @media (max-width:480px){
@@ -89,6 +96,8 @@ details summary{cursor:pointer;color:var(--muted);font-size:14px}
   th.h-opt,td.opt{display:none}
   .cust{grid-template-columns:1fr 1fr}
   .cust .name{grid-column:1/-1}
+  .micros{grid-template-columns:1fr 1fr}
+  .mtot{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -142,6 +151,17 @@ details summary{cursor:pointer;color:var(--muted);font-size:14px}
       <button class="btn sec" id="rNo">Cancelar</button></div>
   </section>
 
+  <section class="card">
+    <h2>Notas</h2>
+    <textarea id="notas" placeholder="Escribe aquí lo que quieras. No se borra al empezar un nuevo día." rows="4"></textarea>
+  </section>
+
+  <section class="card">
+    <details open>
+      <summary>Vitaminas, minerales y fibra de hoy</summary>
+      <div class="mtot" id="mTot" style="margin-top:14px"></div>
+    </details>
+  </section>
 
   <section class="card">
     <details>
@@ -166,6 +186,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:14px}
         <div><label>Cal /100</label><input type="number" id="eCal" min="0" step="any" inputmode="decimal"></div>
         <div><label>Prot /100</label><input type="number" id="ePro" min="0" step="any" inputmode="decimal"></div>
         <div><label>Sal /100</label><input type="number" id="eSal" min="0" step="any" inputmode="decimal"></div>
+        <div class="micros" id="eMicros" style="grid-column:1/-1"></div>
         <button class="btn" id="eSave">Guardar cambios</button>
         <button class="btn sec danger" id="eDel" style="grid-column:1/-1">Eliminar este alimento</button>
         <div id="eConfirm" style="display:none;grid-column:1/-1;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
@@ -195,6 +216,8 @@ details summary{cursor:pointer;color:var(--muted);font-size:14px}
 <script>
 const FOODS_BASE = [["Aceite de oliva virgen extra 🫒", 900.0, 0.0, 0.0], ["Almendra natural 🥜", 640.0, 25.2, 0.02], ["Alubia blanca 🫘", 292.0, 21.4, 0.03], ["Anacardo tostado 🥜", 601.0, 21.0, 0.08], ["Arroz integral 🌾", 350.0, 7.6, 0.0], ["Arroz redondo 🌾", 344.0, 8.2, 0.0], ["Azúcar 🍫", 400.0, 0.0, 0.0], ["Banana 🍌", 90.0, 1.2, 0.0], ["Bebida de soja 🥛", 32.0, 3.1, 0.1], ["Boniato 🍠", 101.0, 1.2, 0.05], ["Brócoli 🥦", 29.0, 3.0, 0.03], ["Canónigos 🍃", 14.0, 1.8, 0.1], ["Cebolla 🧅", 40.0, 1.2, 0.0], ["Ciruelas secas 🍇", 240.0, 2.2, 0.0], ["Crema de cacahuete 🥜", 608.0, 30.0, 0.0], ["Dátiles 🍇", 296.0, 2.2, 0.0], ["Espinaca fresca 🍃", 22.0, 2.7, 0.14], ["Garbanzos 🫘", 348.0, 18.6, 0.07], ["Gotas de chocolate 🍫", 501.0, 6.0, 0.02], ["Guisantes 🫘", 82.0, 6.0, 0.01], ["Harina de avena 🌾", 384.0, 12.2, 0.0], ["Higos secos", 310.0, 3.2, 0.0], ["Huevos 🥚", 150.0, 12.5, 0.35], ["Kéfir 🥛", 74.0, 3.9, 0.08], ["Lentejas 🫘", 320.0, 24.5, 0.05], ["Lata atún al natural (ud) 🐟", 6100.0, 1400.0, 72.0], ["Lata atún en aceite (ud) 🐟🫒", 28400.0, 1400.0, 72.0], ["Lata atún en aceite escurrido (ud) 🐟🫒", 15300.0, 1300.0, 72.0], ["Maíz (de lata sin la sal) 🌽", 75.0, 2.6, 0.0], ["Manzana 🍎", 50.0, 0.3, 0.0], ["Merluza congelada 🐟", 82.0, 18.0, 0.24], ["Naranja 🍊", 38.0, 0.8, 0.0], ["Nueces 🥜", 709.0, 18.0, 0.0], ["Pasta lentejas 🌾", 334.0, 26.0, 0.0], ["Pasta integral 🌾", 345.0, 13.5, 0.01], ["Patata 🥔", 75.0, 2.2, 0.01], ["Pimiento rojo 🍅", 29.0, 1.3, 0.0], ["Piña 🍍", 49.0, 0.5, 0.0], ["Pera 🍐", 45.0, 0.4, 0.0], ["Queso fresco batido 🥛", 46.0, 8.0, 0.1], ["Salmón 🐟", 223.0, 20.0, 0.1], ["Salteado de verduras 🥦", 31.0, 2.0, 0.02], ["Sal yodada 🧂", 0.0, 0.0, 100.0], ["Semillas de sésamo 🫘", 575.0, 17.0, 0.1], ["Soja texturizada (portugal) 🫘", 318.0, 51.5, 0.01], ["Tomate pera 🍅", 19.0, 0.9, 0.0], ["Tortilla de avena (ud) 🍞", 17200.0, 910.0, 80.0], ["Tortitas de legumbres (ud) 🍞", 10000.0, 680.0, 46.0], ["Uvas pasas 🍇", 324.0, 3.1, 0.0], ["Zanahoria 🥕", 34.0, 0.8, 0.18], ["Pechuga de pollo entera 🍗", 106.0, 22.0, 0.16], ["Añadir calorías ➕", 100.0, 0.0, 0.0], ["Añadir proteína ➕", 0.0, 100.0, 0.0], ["Añadir sal ➕", 0.0, 0.0, 100.0]];   // [nombre, cal, prot, sal] por 100 g, de tu Excel
 const KEY = 'contadorCalorias.v1';
+// micronutrientes (valores por 100 g, sin unidad fija; todos a 0 hasta que los edites)
+const MICROS = ['Vitamina A','Vitamina D','Vitamina E','Vitamina C','Vitamina B1','Vitamina B2','Vitamina B3','Vitamina B6','Vitamina B9','Vitamina B12','Calcio','Hierro','Magnesio','Fósforo','Potasio','Zinc','Yodo','Fibra'];
 
 const $ = id => document.getElementById(id);
 const hoy = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
@@ -202,7 +225,7 @@ const fmt = (n,d=0) => (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleStr
 const esUd = n => /\(ud\)/i.test(n);
 const sinEmoji = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 
-let state = { date: hoy(), entries: [], custom: [], edits: {}, deleted: [] };
+let state = { date: hoy(), entries: [], custom: [], edits: {}, deleted: [], notes: '' };
 function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.entries) state=Object.assign(state,s); }catch(e){} delete state.history; }
 let storageOK = true;
 function save(){
@@ -217,10 +240,11 @@ function showSaved(){
 try{ localStorage.setItem(KEY+'.test','1'); localStorage.removeItem(KEY+'.test'); }catch(e){ storageOK=false; }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 
-// cada alimento: [nombre, cal, prot, sal, origen('b'|'c'), clave]
+// cada alimento: [nombre, cal, prot, sal, micros[], origen('b'|'c'), clave]
+const norm = f => { const m = Array.isArray(f[4]) ? f[4] : []; return [f[0],f[1],f[2],f[3], MICROS.map((_,i)=>+m[i]||0)]; };
 const allFoods = () => FOODS_BASE.filter(f=>!state.deleted.includes(f[0]))
-  .map(f=>{ const e=state.edits[f[0]]; return (e||f.slice(0,4)).concat(['b',f[0]]); })
-  .concat(state.custom.map(f=>f.slice(0,4).concat(['c',f[0]])))
+  .map(f=>{ const e=state.edits[f[0]]; return norm(e||f).concat(['b',f[0]]); })
+  .concat(state.custom.map(f=>norm(f).concat(['c',f[0]])))
   .sort((a,b)=>a[0].localeCompare(b[0],'es'));
 
 function archiveDay(){
@@ -276,7 +300,7 @@ $('add').addEventListener('click',addEntry);
 
 function addEntry(){
   if($('add').disabled) return;
-  state.entries.push({id:Date.now()+Math.random(), name:sel[0], p:[sel[1],sel[2],sel[3]], q:parseFloat($('cant').value)});
+  state.entries.push({id:Date.now()+Math.random(), name:sel[0], p:[sel[1],sel[2],sel[3]], m:sel[4].slice(), q:parseFloat($('cant').value)});
   save(); sel=null; $('buscar').value=''; $('cant').value=''; $('unidad').textContent='g'; upd(); render(); $('buscar').focus();
 }
 
@@ -285,6 +309,9 @@ function render(){
   $('fecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   const t = totals();
   $('tCal').textContent = fmt(t.cal); $('tPro').textContent = fmt(t.pro,1); $('tSal').textContent = fmt(t.sal,2);
+  const mt = MICROS.map(()=>0);
+  state.entries.forEach(e=>(e.m||[]).forEach((v,i)=>{ if(i<mt.length) mt[i]+=(+v||0)*e.q/100; }));
+  mt.forEach((v,i)=>{ $('mT'+i).textContent = fmt(v,2); });
   const tb = $('filas');
   if(!state.entries.length) tb.innerHTML = '<tr><td colspan="6" class="vacio">Aún no has añadido nada hoy</td></tr>';
   else tb.innerHTML = state.entries.map(e=>{ const c=calc(e); return `<tr>
@@ -331,24 +358,25 @@ $('eSel').addEventListener('change',()=>{
   if(i===''){ eCur=null; $('eForm').style.display='none'; return; }
   eCur=eList[+i]; $('eForm').style.display='grid';
   $('eNom').value=eCur[0]; $('eCal').value=eCur[1]; $('ePro').value=eCur[2]; $('eSal').value=eCur[3];
-  $('eRestore').style.display = (eCur[4]==='b' && state.edits[eCur[5]]) ? '' : 'none';
+  MICROS.forEach((_,k)=>{ $('eM'+k).value=eCur[4][k]; });
+  $('eRestore').style.display = (eCur[5]==='b' && state.edits[eCur[6]]) ? '' : 'none';
 });
 $('eSave').addEventListener('click',()=>{
   if(!eCur) return; const n=$('eNom').value.trim(); if(!n){ $('eNom').focus(); return; }
-  const v=id=>Math.max(0,parseFloat($(id).value)||0); const nf=[n,v('eCal'),v('ePro'),v('eSal')];
-  if(eCur[4]==='b') state.edits[eCur[5]]=nf;
-  else { const k=state.custom.findIndex(f=>f[0]===eCur[5]); if(k>=0) state.custom[k]=nf; }
+  const v=id=>Math.max(0,parseFloat($(id).value)||0); const nf=[n,v('eCal'),v('ePro'),v('eSal'),MICROS.map((_,k)=>v('eM'+k))];
+  if(eCur[5]==='b') state.edits[eCur[6]]=nf;
+  else { const k=state.custom.findIndex(f=>f[0]===eCur[6]); if(k>=0) state.custom[k]=nf; }
   save(); eRefresh(); eMsg('Cambios guardados: '+n);
 });
 $('eDel').addEventListener('click',()=>{ if(eCur){ $('eConfirm').style.display='flex'; $('eDel').style.display='none'; } });
 $('eNo').addEventListener('click',()=>{ $('eConfirm').style.display='none'; $('eDel').style.display=''; });
 $('eYes').addEventListener('click',()=>{
   if(!eCur) return; const n=eCur[0];
-  if(eCur[4]==='b'){ if(!state.deleted.includes(eCur[5])) state.deleted.push(eCur[5]); delete state.edits[eCur[5]]; }
-  else state.custom = state.custom.filter(f=>f[0]!==eCur[5]);
+  if(eCur[5]==='b'){ if(!state.deleted.includes(eCur[6])) state.deleted.push(eCur[6]); delete state.edits[eCur[6]]; }
+  else state.custom = state.custom.filter(f=>f[0]!==eCur[6]);
   save(); eRefresh(); eMsg('Eliminado: '+n);
 });
-$('eRestore').addEventListener('click',()=>{ if(eCur && eCur[4]==='b'){ delete state.edits[eCur[5]]; save(); eRefresh(); eMsg('Valores originales restaurados'); } });
+$('eRestore').addEventListener('click',()=>{ if(eCur && eCur[5]==='b'){ delete state.edits[eCur[6]]; save(); eRefresh(); eMsg('Valores originales restaurados'); } });
 $('eRestoreAll').addEventListener('click',()=>{ state.deleted=[]; save(); eRefresh(); eMsg('Alimentos restaurados'); });
 
 // --- copia de seguridad ---
@@ -365,13 +393,18 @@ $('bFile').addEventListener('change',e=>{
   const r=new FileReader();
   r.onload=()=>{ try{
     const s=JSON.parse(r.result).state; if(!s||!Array.isArray(s.entries)) throw 0;
-    state=Object.assign({ date: hoy(), entries: [], custom: [], edits: {}, deleted: [] }, s); delete state.history;
-    checkDay(); save(); render(); eRefresh(); bMsg('Copia restaurada.');
+    state=Object.assign({ date: hoy(), entries: [], custom: [], edits: {}, deleted: [], notes: '' }, s); delete state.history;
+    checkDay(); save(); render(); eRefresh(); $('notas').value=state.notes||''; bMsg('Copia restaurada.');
   }catch(err){ bMsg('Ese archivo no es una copia válida.'); } e.target.value=''; };
   r.readAsText(f);
 });
 
+$('eMicros').innerHTML = MICROS.map((n,i)=>`<div><label>${n} /100</label><input type="number" id="eM${i}" min="0" step="any" inputmode="decimal"></div>`).join('');
+$('mTot').innerHTML = MICROS.map((n,i)=>`<div><div class="n" id="mT${i}">0</div><div class="l">${n}</div></div>`).join('');
+
 load(); checkDay(); render(); eRefresh(); showSaved();
+$('notas').value = state.notes || '';
+$('notas').addEventListener('input',()=>{ state.notes = $('notas').value; save(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkDay(); });
 setInterval(checkDay,60000);
 </script>
