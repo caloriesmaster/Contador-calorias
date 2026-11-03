@@ -235,7 +235,7 @@ details summary:hover{color:var(--ink)}
 .tab{min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 5px;background:var(--card);color:var(--muted);font: inherit;font-size:13px;font-weight:600;cursor:pointer}
 .tab.active{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
 .page{display:none}.page.active{display:block}
-#notas{min-height:190px;resize:vertical;line-height:1.55}
+#notas{min-height:380px;resize:vertical;line-height:1.55}
 .wform>div{min-width:0}
 #wDate{display:block;width:100%;min-width:0;max-width:100%;padding:10px 7px;font-size:14px;}
 @media(max-width:560px){
@@ -702,7 +702,7 @@ document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>
   window.scrollTo({top:0,behavior:'smooth'});
 }));
 // Las notas crecen según el texto introducido.
-function resizeNotes(){ const n=$('notas'); n.style.height='auto'; n.style.height=Math.max(190,n.scrollHeight)+'px'; }
+function resizeNotes(){ const n=$('notas'); n.style.height='auto'; n.style.height=Math.max(380,n.scrollHeight)+'px'; }
 $('notas').addEventListener('input',resizeNotes);
 resizeNotes();
 </script>
