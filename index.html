@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Contador">
+<link rel="manifest" href="./manifest.webmanifest?v=2">
+<link rel="apple-touch-icon" href="./apple-touch-icon-v2.png">
+<title>Contador calorías</title>
+<style>
+
+:root{
+  color-scheme: light;
+  --bg:#ffffff;
+  --card:#ffffff;
+  --ink:#111111;
+  --muted:#777777;
+  --line:#e5e5e5;
+  --accent:#111111;
+  --accent-ink:#ffffff;
+  --btn:#111111;
+  --btn-ink:#ffffff;
+  --cal:#222222;
+  --pro:#555555;
+  --sal:#888888;
+  --cost:#aaaaaa;
+  --danger:#444444;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#111111;
+    --card:#1c1c1c;
+    --ink:#f2f2f2;
+    --muted:#aaaaaa;
+    --line:#383838;
+    --accent:#f2f2f2;
+    --accent-ink:#111111;
+    --btn:#f2f2f2;
+    --btn-ink:#111111;
+    --cal:#eeeeee;
+    --pro:#bbbbbb;
+    --sal:#888888;
+    --cost:#666666;
+    --danger:#cccccc;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto, sans-serif;
+  letter-spacing:-.01em;
+}
+.wrap{max-width:760px;margin:0 auto;padding:30px 20px 56px}
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin:4px 2px 22px
+}
+h1{font-size:21px;font-weight:650;letter-spacing:-.045em;margin:0}
+#fecha{color:var(--muted);font-size:13px;font-weight:500}
+#fecha::first-letter{text-transform:uppercase}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:14px;
+  box-shadow:0 3px 14px rgba(31,48,37,.025);
+}
+.totales{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;text-align:center}
+.tot .n{
+  font-size:29px;font-weight:650;line-height:1.15;
+  font-variant-numeric:tabular-nums;letter-spacing:-.055em
+}
+.tot.cal .n{color:var(--cal);font-size:37px}
+.tot.pro .n{color:var(--pro)}
+.tot.sal .n{color:var(--sal)}
+.tot .l{
+  font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.11em;font-weight:650;margin-top:5px
+}
+.tot .u{font-size:11px;color:var(--muted);font-weight:500}
+label{
+  display:block;font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.1em;
+  font-weight:650;margin-bottom:6px
+}
+input,button,select,textarea{font:inherit}
+input[type=text],input[type=number],input[type=date],select,#notas{
+  width:100%;padding:12px 13px;border:1px solid var(--line);
+  border-radius:11px;background:var(--bg);color:var(--ink);
+  transition:border-color .18s,box-shadow .18s,background .18s
+}
+input:focus,select:focus,#notas:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)
+}
+.form{display:grid;grid-template-columns:1fr 125px;gap:12px;align-items:end}
+.pick{position:relative}
+#lista{
+  position:absolute;left:0;right:0;top:100%;z-index:5;
+  max-height:260px;overflow:auto;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;margin-top:5px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);display:none
+}
+#lista div{padding:10px 13px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+#lista div.sel,#lista div:hover{background:var(--bg)}
+#lista small{color:var(--muted)}
+.qty{position:relative}
+.qty span{position:absolute;right:13px;top:50%;transform:translateY(-30%);color:var(--muted);pointer-events:none;font-size:13px}
+.qty input{padding-right:40px}
+#prev{grid-column:1/-1;font-size:13px;color:var(--muted);min-height:18px;padding:1px 2px}
+#prev b{color:var(--ink);font-weight:650}
+.btn{
+  border:1px solid transparent;border-radius:11px;padding:12px 17px;
+  background:var(--btn);color:var(--btn-ink);font-weight:600;
+  cursor:pointer;grid-column:1/-1;transition:opacity .18s,transform .18s,background .18s
+}
+.btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(0)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sec{
+  background:transparent;color:var(--muted);border:1px solid var(--line);
+  grid-column:auto;font-weight:550;padding:8px 12px;font-size:12px
+}
+.btn.sec:hover:not(:disabled){background:var(--bg);color:var(--ink)}
+.btn.danger{color:var(--danger)}
+.btn.dark{background:var(--btn);color:var(--btn-ink);border:0}
+#confirmBox{display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px;font-size:13px}
+#confirmBox span{color:var(--muted)}
+#cMsg{color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px}
+.hist details{border-top:1px solid var(--line);padding:10px 0}
+.hist details:first-of-type{border-top:0}
+.hist summary{
+  display:flex;width:100%;justify-content:space-between;gap:8px;
+  font-size:13px;color:var(--ink);list-style:none;font-weight:550
+}
+.hist summary::-webkit-details-marker{display:none}
+.hist summary::before{content:"＋";color:var(--muted);margin-right:7px;font-size:12px}
+.hist details[open] summary::before{content:"−"}
+.hist summary .tt{margin-left:auto;font-variant-numeric:tabular-nums}
+.hist ul{list-style:none;margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:12px}
+.hist ul li{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.hist .none{color:var(--muted);text-align:center;padding:10px 0;font-size:13px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{
+  font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.09em;text-align:right;padding:0 7px 10px;font-weight:650
+}
+th:first-child{text-align:left}
+td{padding:11px 7px;border-top:1px solid var(--line);text-align:right;font-size:13px}
+td:first-child{text-align:left}
+td .q{width:70px;padding:6px 7px;text-align:right;font-size:13px}
+td .x{
+  background:none;border:0;color:var(--muted);cursor:pointer;
+  font-size:18px;padding:0 4px
+}
+td .x:hover{color:var(--danger)}
+.vacio{color:var(--muted);text-align:center;padding:22px 0;font-size:13px}
+.acciones{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:15px}
+h2{
+  font-size:11px;margin:0 0 14px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.12em;font-weight:700
+}
+.hist div{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
+.hist div:first-of-type{border-top:0}
+.hist span.m{color:var(--muted)}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:550}
+details summary:hover{color:var(--ink)}
+#notas{min-height:105px;resize:vertical;font:inherit}
+.micros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.micros label{font-size:10px}
+.mtot{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 12px;text-align:center}
+.mtot .n{font-size:19px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums}
+.mtot .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.cust{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-top:14px;align-items:end}
+.cust .btn{grid-column:1/-1}
+.cust.ef{grid-template-columns:repeat(4,1fr)}
+.cust.ef .name{grid-column:1/-1}
+.wform{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+#wInfo{font-size:13px;color:var(--muted);margin:14px 0 6px;min-height:20px}
+#wInfo b{color:var(--ink)}
+#wMsg{color:var(--muted);font-size:12px;margin:8px 0 0;min-height:18px}
+.wbox{position:relative}
+.wbox svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.wbox .grid{stroke:var(--line);stroke-width:1}
+.wbox .ax{fill:var(--muted);font-size:11px}
+.wbox .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.wbox .pt{fill:var(--accent);stroke:var(--card);stroke-width:2}
+.wbox .lv{fill:var(--ink);font-size:12px;font-weight:700}
+.wbox .cross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+#wTip{position:absolute;top:0;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:11px;padding:5px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;display:none}
+.wrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
+.wrow:first-child{border-top:0}
+.wrow .x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px}
+.wrow .x:hover{color:var(--danger)}
+.histtbl td{font-size:12px;padding:8px 6px}
+.histtbl tr.avg td{font-weight:700}
+.histtbl tr.hoy td:first-child{font-weight:700}
+.costeRow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.costeRow .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:650}
+.costeRow .n{font-size:21px;font-weight:650;font-variant-numeric:tabular-nums;color:var(--cost)}
+#warn{border-radius:12px!important}
+@media (max-width:560px){
+  .wrap{padding:20px 12px 36px}
+  .card{padding:16px;border-radius:15px;margin-bottom:11px}
+  header{margin:3px 2px 17px}
+  h1{font-size:19px}
+  .totales{gap:6px}
+  .tot .n{font-size:24px}
+  .tot.cal .n{font-size:29px}
+  .tot .l{font-size:9px;letter-spacing:.08em}
+  .form{grid-template-columns:1fr 105px;gap:9px}
+  th.h-opt,td.opt{display:none}
+  .cust{grid-template-columns:1fr 1fr}
+  .cust .name{grid-column:1/-1}
+  .cust.ef{grid-template-columns:1fr 1fr}
+  .micros{grid-template-columns:1fr 1fr}
+  .mtot{grid-template-columns:repeat(2,1fr);gap:17px 10px}
+  .acciones{justify-content:stretch}
+  .acciones .btn{flex:1}
+  td{padding:9px 5px;font-size:12px}
+  td .q{width:58px}
+}
+
+
+/* Navegación por secciones */
+.tabs{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:9px 0 12px;background:var(--bg)}
+.tab{min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 5px;background:var(--card);color:var(--muted);font: inherit;font-size:13px;font-weight:600;cursor:pointer}
+.tab.active{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.page{display:none}.page.active{display:block}
+#notas{min-height:380px;resize:vertical;line-height:1.55}
+.wform>div{min-width:0}
+#wDate{display:block;width:100%;min-width:0;max-width:100%;padding:10px 7px;font-size:14px;}
+@media(max-width:560px){
+  .tabs{gap:4px;padding:8px 0 10px}
+  .tab{font-size:12px;padding:10px 2px}
+  .wform{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+  #wDate{font-size:13px;padding:10px 4px;letter-spacing:-.04em}
+}
+
+/* Peso: campos de peso y fecha idénticos */
+#wKg,#wDate{
+  display:block;width:100%;min-width:0;max-width:100%;
+  height:42px;padding:0 10px;font-size:14px;line-height:1.2;letter-spacing:0;
+  text-align:left;-webkit-appearance:none;appearance:none;
+}
+#wDate::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+@media(max-width:560px){
+  #wKg,#wDate{padding:0 8px;font-size:14px;letter-spacing:0}
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="warn" style="display:none;background:#f2f2f2;color:#222222;border:1px solid #cccccc;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px">
+    ⚠️ <b>Este navegador no está guardando los datos.</b> Lo que registres se perderá al cerrar o recargar la página. Ábrelo en el navegador normal (Safari/Chrome, no en modo privado ni desde una vista previa del correo o de Archivos) y usa «Descargar copia» para no perder nada.
+  </div>
+  <header>
+    <h1>Contador calorías 🥑</h1>
+    <div id="fecha"></div>
+  </header>
+
+  <section class="card">
+    <div class="totales">
+      <div class="tot cal"><div class="n" id="tCal">0</div><div class="l">Calorías <span class="u">kcal</span></div></div>
+      <div class="tot pro"><div class="n" id="tPro">0</div><div class="l">Proteína <span class="u">g</span></div></div>
+      <div class="tot sal"><div class="n" id="tSal">0</div><div class="l">Sal <span class="u">g</span></div></div>
+    </div>
+  </section>
+  <nav class="tabs" aria-label="Secciones principales">
+    <button class="tab active" type="button" data-tab="diario">Diario</button>
+    <button class="tab" type="button" data-tab="seguimiento">Seguimiento</button>
+    <button class="tab" type="button" data-tab="alimentos">Alimentos</button>
+    <button class="tab" type="button" data-tab="ajustes">Ajustes</button>
+  </nav>
+  <main>
+    <div class="page active" id="page-diario">
+  <section class="card">
+    <div class="form">
+      <div class="pick">
+        <label for="buscar">Alimento</label>
+        <input type="text" id="buscar" placeholder="Escribe para buscar…" autocomplete="off">
+        <div id="lista"></div>
+      </div>
+      <div class="qty">
+        <label for="cant" id="cantLbl">Cantidad</label>
+        <input type="number" id="cant" min="0" step="any" inputmode="decimal" placeholder="0">
+        <span id="unidad">g</span>
+      </div>
+      <div id="prev"></div>
+      <button class="btn" id="add" disabled>Añadir</button>
+    </div>
+  </section>  <section class="card">
+    <h2>Notas</h2>
+    <textarea id="notas" placeholder="Escribe aquí lo que quieras. No se borra al empezar un nuevo día." rows="4"></textarea>
+  </section>  <section class="card">
+    <h2>Registro de hoy</h2>
+    <table>
+      <thead><tr><th>Alimento</th><th>Cant.</th><th>Cal</th><th class="h-opt">Prot</th><th class="h-opt">Sal</th><th>Coste</th><th></th></tr></thead>
+      <tbody id="filas"></tbody>
+    </table>
+    <div class="acciones">
+      <button class="btn sec" id="deshacer">↩ Deshacer último</button>
+      <button class="btn sec danger" id="reset">Empezar nuevo día</button>
+    </div>
+    <div id="confirmBox"><span>¿Guardar hoy en el historial y empezar un nuevo día?</span>
+      <button class="btn sec dark" id="rYes">Sí, empezar nuevo día</button>
+      <button class="btn sec" id="rNo">Cancelar</button></div>
+  </section>
+    </div>
+    <div class="page" id="page-seguimiento">
+  <section class="card">
+    <h2>Peso</h2>
+    <div class="wform">
+      <div><label for="wKg">Peso (kg)</label><input type="number" id="wKg" min="0" step="any" inputmode="decimal" placeholder="0,0"></div>
+      <div><label for="wDate">Fecha</label><input type="date" id="wDate"></div>
+      <button class="btn" id="wAdd">Guardar peso</button>
+    </div>
+    <p id="wMsg"></p>
+    <div id="wInfo"></div>
+    <div id="wChart"></div>
+    <details style="margin-top:10px">
+      <summary>Registros de peso</summary>
+      <div id="wList" style="margin-top:8px"></div>
+    </details>
+  </section>
+    </div>
+    <div class="page" id="page-alimentos">
+  <section class="card">
+    <details open>
+      <summary>Vitaminas, minerales, fibra y coste de hoy</summary>
+      <div class="costeRow"><span class="l">Coste de hoy</span><span class="n" id="tCoste">0,00 €</span></div>
+      <div class="mtot" id="mTot" style="margin-top:14px"></div>
+    </details>
+  </section>  <section class="card">
+    <details>
+      <summary>Historial de los últimos 30 días</summary>
+      <table class="histtbl" style="margin-top:12px">
+        <thead><tr><th>Día</th><th>Cal</th><th>Prot</th><th>Sal</th><th>Coste</th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </details>
+  </section>
+
+    </div>
+    <div class="page" id="page-ajustes">
+  <section class="card">
+    <details>
+      <summary>Añadir un alimento nuevo a la lista</summary>
+      <div class="cust">
+        <div class="name"><label>Nombre</label><input type="text" id="cNom" placeholder="Ej: Yogur (ud)"></div>
+        <div><label>Cal /100</label><input type="number" id="cCal" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Prot /100</label><input type="number" id="cPro" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Sal /100</label><input type="number" id="cSal" min="0" step="any" inputmode="decimal"></div>
+        <button class="btn" id="cAdd">Guardar alimento</button>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Valores por 100 g, como en tu Excel. Si el nombre incluye “(ud)”, la cantidad se cuenta en unidades y los valores son por unidad × 100.</p>
+      <p id="cMsg"></p>
+    </details>
+    <details style="margin-top:12px">
+      <summary>Editar o eliminar un alimento</summary>
+      <div class="cust" style="grid-template-columns:1fr;margin-top:12px">
+        <div><label>Alimento</label><select id="eSel" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)"></select></div>
+      </div>
+      <div class="cust ef" id="eForm" style="display:none">
+        <div class="name"><label>Nombre</label><input type="text" id="eNom"></div>
+        <div><label>Cal /100</label><input type="number" id="eCal" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Prot /100</label><input type="number" id="ePro" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Sal /100</label><input type="number" id="eSal" min="0" step="any" inputmode="decimal"></div>
+        <div><label>Coste €</label><input type="number" id="eCoste" min="0" step="any" inputmode="decimal"></div>
+        <div style="grid-column:1/-1;font-size:12px;color:var(--muted);margin-top:-2px">Coste en € por 100 g (si el nombre lleva “(ud)”, € por unidad).</div>
+        <div class="micros" id="eMicros" style="grid-column:1/-1"></div>
+        <button class="btn" id="eSave">Guardar cambios</button>
+        <button class="btn sec danger" id="eDel" style="grid-column:1/-1">Eliminar este alimento</button>
+        <div id="eConfirm" style="display:none;grid-column:1/-1;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+          <span style="color:var(--muted)">¿Eliminar este alimento de la lista?</span>
+          <button class="btn sec dark" id="eYes">Sí, eliminar</button>
+          <button class="btn sec" id="eNo">Cancelar</button>
+        </div>
+        <button class="btn sec" id="eRestore" style="display:none;grid-column:1/-1">Restaurar valores originales de este alimento</button>
+      </div>
+      <p id="eMsg" style="color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px"></p>
+      <button class="btn sec" id="eRestoreAll" style="display:none">Restaurar alimentos eliminados</button>
+    </details>
+  </section>
+      <section class="card">
+    <details style="margin-top:12px">
+      <summary>Copia de seguridad</summary>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0">Los datos se guardan solo en este navegador. Descarga una copia de vez en cuando y, si algún día se borran, restáurala aquí.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sec" id="bDown">⬇ Descargar copia</button>
+        <button class="btn sec" id="bUp">⬆ Restaurar copia</button>
+        <input type="file" id="bFile" accept=".json,application/json" style="display:none">
+      </div>
+      <p id="bMsg" style="color:var(--muted);font-size:13px;margin:8px 0 0;min-height:18px"></p>
+    </details>
+    <p id="saved" style="color:var(--muted);font-size:12px;margin:12px 0 0"></p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const FOODS_BASE = [["Aceite de oliva virgen extra 🫒", 900.0, 0.0, 0.0], ["Almendra natural 🥜", 640.0, 25.2, 0.02], ["Alubia blanca 🫘", 292.0, 21.4, 0.03], ["Anacardo tostado 🥜", 601.0, 21.0, 0.08], ["Arroz integral 🌾", 350.0, 7.6, 0.0], ["Arroz redondo 🌾", 344.0, 8.2, 0.0], ["Azúcar 🍫", 400.0, 0.0, 0.0], ["Banana 🍌", 90.0, 1.2, 0.0], ["Bebida de soja 🥛", 32.0, 3.1, 0.1], ["Boniato 🍠", 101.0, 1.2, 0.05], ["Brócoli 🥦", 29.0, 3.0, 0.03], ["Canónigos 🍃", 14.0, 1.8, 0.1], ["Cebolla 🧅", 40.0, 1.2, 0.0], ["Ciruelas secas 🍇", 240.0, 2.2, 0.0], ["Crema de cacahuete 🥜", 608.0, 30.0, 0.0], ["Dátiles 🍇", 296.0, 2.2, 0.0], ["Espinaca fresca 🍃", 22.0, 2.7, 0.14], ["Garbanzos 🫘", 348.0, 18.6, 0.07], ["Gotas de chocolate 🍫", 501.0, 6.0, 0.02], ["Guisantes 🫘", 82.0, 6.0, 0.01], ["Harina de avena 🌾", 384.0, 12.2, 0.0], ["Higos secos", 310.0, 3.2, 0.0], ["Huevos 🥚", 150.0, 12.5, 0.35], ["Kéfir 🥛", 74.0, 3.9, 0.08], ["Lentejas 🫘", 320.0, 24.5, 0.05], ["Lata atún al natural (ud) 🐟", 6100.0, 1400.0, 72.0], ["Lata atún en aceite (ud) 🐟🫒", 28400.0, 1400.0, 72.0], ["Lata atún en aceite escurrido (ud) 🐟🫒", 15300.0, 1300.0, 72.0], ["Maíz (de lata sin la sal) 🌽", 75.0, 2.6, 0.0], ["Manzana 🍎", 50.0, 0.3, 0.0], ["Merluza congelada 🐟", 82.0, 18.0, 0.24], ["Naranja 🍊", 38.0, 0.8, 0.0], ["Nueces 🥜", 709.0, 18.0, 0.0], ["Pasta lentejas 🌾", 334.0, 26.0, 0.0], ["Pasta integral 🌾", 345.0, 13.5, 0.01], ["Patata 🥔", 75.0, 2.2, 0.01], ["Pimiento rojo 🍅", 29.0, 1.3, 0.0], ["Piña 🍍", 49.0, 0.5, 0.0], ["Pera 🍐", 45.0, 0.4, 0.0], ["Queso fresco batido 🥛", 46.0, 8.0, 0.1], ["Salmón 🐟", 223.0, 20.0, 0.1], ["Salteado de verduras 🥦", 31.0, 2.0, 0.02], ["Sal yodada 🧂", 0.0, 0.0, 100.0], ["Semillas de sésamo 🫘", 575.0, 17.0, 0.1], ["Soja texturizada (portugal) 🫘", 318.0, 51.5, 0.01], ["Tomate pera 🍅", 19.0, 0.9, 0.0], ["Tortilla de avena (ud) 🍞", 17200.0, 910.0, 80.0], ["Tortitas de legumbres (ud) 🍞", 10000.0, 680.0, 46.0], ["Uvas pasas 🍇", 324.0, 3.1, 0.0], ["Zanahoria 🥕", 34.0, 0.8, 0.18], ["Pechuga de pollo entera 🍗", 106.0, 22.0, 0.16], ["Añadir calorías ➕", 100.0, 0.0, 0.0], ["Añadir proteína ➕", 0.0, 100.0, 0.0], ["Añadir sal ➕", 0.0, 0.0, 100.0]];   // [nombre, cal, prot, sal] por 100 g, de tu Excel
+const KEY = 'contadorCalorias.v1';
+// micronutrientes (valores por 100 g, sin unidad fija; todos a 0 hasta que los edites)
+const MICROS = ['Vitamina A','Vitamina D','Vitamina E','Vitamina C','Vitamina B1','Vitamina B2','Vitamina B3','Vitamina B6','Vitamina B9','Vitamina B12','Calcio','Hierro','Magnesio','Fósforo','Potasio','Zinc','Yodo','Fibra','Selenio'];
+// OJO: el orden de guardado no se toca para no romper copias antiguas (Fibra = posición 17, Selenio = 18).
+// Al mostrarlos, la fibra va la última.
+const FIB = MICROS.indexOf('Fibra');
+const ORDER = MICROS.map((_,i)=>i).filter(i=>i!==FIB).concat(FIB);
+
+const $ = id => document.getElementById(id);
+const hoy = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const fmt = (n,d=0) => (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:d});
+const esUd = n => /\(ud\)/i.test(n);
+const fmtE = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const sinEmoji = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+let state = { date: hoy(), entries: [], custom: [], edits: {}, deleted: [], notes: '', days: [], weights: [] };
+function fixState(){ if(!Array.isArray(state.days)) state.days=[]; if(!Array.isArray(state.weights)) state.weights=[]; }
+function load(){ try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.entries) state=Object.assign(state,s); }catch(e){} delete state.history; fixState(); }
+let storageOK = true;
+function save(){
+  state.saved = Date.now();
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); storageOK = localStorage.getItem(KEY) !== null; }catch(e){ storageOK=false; }
+  showSaved();
+}
+function showSaved(){
+  $('warn').style.display = storageOK ? 'none' : 'block';
+  $('saved').textContent = storageOK && state.saved ? 'Guardado automáticamente en este navegador · última vez a las '+new Date(state.saved).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+}
+try{ localStorage.setItem(KEY+'.test','1'); localStorage.removeItem(KEY+'.test'); }catch(e){ storageOK=false; }
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+// cada alimento: [nombre, cal, prot, sal, micros[], coste, origen('b'|'c'), clave]
+const norm = f => { const m = Array.isArray(f[4]) ? f[4] : []; return [f[0],f[1],f[2],f[3], MICROS.map((_,i)=>+m[i]||0), +f[5]||0]; };
+const allFoods = () => FOODS_BASE.filter(f=>!state.deleted.includes(f[0]))
+  .map(f=>{ const e=state.edits[f[0]]; return norm(e||f).concat(['b',f[0]]); })
+  .concat(state.custom.map(f=>norm(f).concat(['c',f[0]])))
+  .sort((a,b)=>a[0].localeCompare(b[0],'es'));
+
+// historial: al cerrar un día se guardan sus totales (máx. 30 días). Si ese día ya tenía registro, se suman.
+function addDay(d,t){
+  const i = state.days.findIndex(x=>x.d===d);
+  if(i>=0){ const x=state.days[i]; x.cal+=t.cal; x.pro+=t.pro; x.sal+=t.sal; x.cost+=t.cost; }
+  else state.days.push({d, cal:t.cal, pro:t.pro, sal:t.sal, cost:t.cost});
+  state.days.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  state.days = state.days.slice(-30);
+}
+function archiveDay(){
+  if(state.entries.length) addDay(state.date, totals(priceMap()));
+  state.entries = [];
+}
+// --- cambio de día automático ---
+function checkDay(){
+  const h = hoy();
+  if(state.date !== h){
+    archiveDay(); state.date = h; $('wDate').value = h; save(); render();
+  }
+}
+
+const calc = e => ({cal:e.p[0]*e.q/100, pro:e.p[1]*e.q/100, sal:e.p[2]*e.q/100});
+// coste: precio actual del alimento (por nombre); si ya no existe con ese nombre, el que se guardó al añadirlo. "(ud)" = por unidad, resto = por 100 g.
+const costOf = (e,px) => { const live = px.get(e.name); const c = live!==undefined ? live : (+e.c||0); return (+c||0) * (esUd(e.name) ? e.q : e.q/100); };
+const priceMap = () => new Map(allFoods().map(f=>[f[0],f[5]]));
+function totals(px){
+  return state.entries.reduce((a,e)=>{const c=calc(e);a.cal+=c.cal;a.pro+=c.pro;a.sal+=c.sal;a.cost+=costOf(e,px);return a},{cal:0,pro:0,sal:0,cost:0});
+}
+
+// --- selector de alimento ---
+let sel = null, matches = [], idx = -1;
+function showList(){
+  const q = sinEmoji($('buscar').value.trim());
+  matches = allFoods().filter(f=>sinEmoji(f[0]).includes(q));
+  const box = $('lista');
+  if(!matches.length){ box.style.display='none'; return; }
+  idx = matches.length && q ? 0 : -1;
+  box.innerHTML = matches.map((f,i)=>`<div data-i="${i}" class="${i===idx?'sel':''}">${esc(f[0])}<small>${fmt(f[1])} kcal</small></div>`).join('');
+  box.style.display='block';
+}
+function esc(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function choose(i){
+  sel = matches[i]; $('buscar').value = sel[0]; $('lista').style.display='none';
+  const ud = esUd(sel[0]); $('unidad').textContent = ud?'ud':'g'; $('cant').focus(); $('cant').select(); upd();
+}
+function upd(){
+  const q = parseFloat($('cant').value);
+  const ok = sel && q>=0 && !isNaN(q) && $('cant').value!=='';
+  $('add').disabled = !ok;
+  const cost = ok ? (sel[5]||0)*(esUd(sel[0])?q:q/100) : 0;
+  $('prev').innerHTML = ok ? `<b>${fmt(sel[1]*q/100,1)}</b> kcal · ${fmt(sel[2]*q/100,1)} g prot · ${fmt(sel[3]*q/100,2)} g sal${cost>0?' · '+fmtE(cost):''}` : (sel?'':'');
+}
+$('buscar').addEventListener('input',()=>{ sel=null; showList(); upd(); });
+$('buscar').addEventListener('focus',showList);
+$('buscar').addEventListener('keydown',e=>{
+  const box=$('lista');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); if(!matches.length)return; idx=(idx+(e.key==='ArrowDown'?1:-1)+matches.length)%matches.length;
+    [...box.children].forEach((c,i)=>c.classList.toggle('sel',i===idx)); box.children[idx].scrollIntoView({block:'nearest'}); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(idx>=0) choose(idx); }
+  else if(e.key==='Escape'){ box.style.display='none'; }
+});
+$('lista').addEventListener('mousedown',e=>{ const d=e.target.closest('div[data-i]'); if(d){ e.preventDefault(); choose(+d.dataset.i); } });
+document.addEventListener('click',e=>{ if(!e.target.closest('.pick')) $('lista').style.display='none'; });
+$('cant').addEventListener('input',upd);
+$('cant').addEventListener('keydown',e=>{ if(e.key==='Enter') addEntry(); });
+$('add').addEventListener('click',addEntry);
+
+function addEntry(){
+  if($('add').disabled) return;
+  state.entries.push({id:Date.now()+Math.random(), name:sel[0], p:[sel[1],sel[2],sel[3]], m:sel[4].slice(), c:sel[5], q:parseFloat($('cant').value)});
+  save(); sel=null; $('buscar').value=''; $('cant').value=''; $('unidad').textContent='g'; upd(); render(); $('buscar').focus();
+}
+
+// --- render ---
+function render(){
+  $('fecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const px = priceMap(), t = totals(px);
+  $('tCal').textContent = fmt(t.cal); $('tPro').textContent = fmt(t.pro,1); $('tSal').textContent = fmt(t.sal,2);
+  $('tCoste').textContent = fmtE(t.cost);
+  const mt = MICROS.map(()=>0);
+  state.entries.forEach(e=>(e.m||[]).forEach((v,i)=>{ if(i<mt.length) mt[i]+=(+v||0)*e.q/100; }));
+  mt.forEach((v,i)=>{ $('mT'+i).textContent = fmt(v,2); });
+  const tb = $('filas');
+  if(!state.entries.length) tb.innerHTML = '<tr><td colspan="7" class="vacio">Aún no has añadido nada hoy</td></tr>';
+  else tb.innerHTML = state.entries.map(e=>{ const c=calc(e), k=costOf(e,px); return `<tr>
+    <td>${esc(e.name)}</td>
+    <td><input class="q" type="number" min="0" step="any" value="${e.q}" data-id="${e.id}"></td>
+    <td>${fmt(c.cal)}</td><td class="opt">${fmt(c.pro,1)}</td><td class="opt">${fmt(c.sal,2)}</td><td>${k>0?fmtE(k):'–'}</td>
+    <td><button class="x" data-del="${e.id}" title="Quitar" aria-label="Quitar">×</button></td></tr>`; }).join('');
+  $('deshacer').disabled = !state.entries.length;
+  renderWeight(); renderHist(t);
+}
+
+// --- historial de los últimos 30 días ---
+function renderHist(t){
+  const st = state.days.find(x=>x.d===state.date);
+  const hoyR = st ? {cal:t.cal+st.cal, pro:t.pro+st.pro, sal:t.sal+st.sal, cost:t.cost+st.cost} : t;
+  const past = state.days.filter(x=>x.d!==state.date).sort((a,b)=>a.d<b.d?1:-1);
+  const row = (label,r,cls)=>`<tr class="${cls||''}"><td>${label}</td><td>${fmt(r.cal)}</td><td>${fmt(r.pro,1)}</td><td>${fmt(r.sal,2)}</td><td>${fmtE(r.cost)}</td></tr>`;
+  let h = row('Hoy',hoyR,'hoy');
+  if(past.length){
+    const n=past.length, av=k=>past.reduce((a,x)=>a+(+x[k]||0),0)/n;
+    h += row('Media ('+n+(n===1?' día)':' días)'),{cal:av('cal'),pro:av('pro'),sal:av('sal'),cost:av('cost')},'avg');
+  }
+  h += past.map(x=>row(shortDate(x.d,true),x)).join('');
+  $('histBody').innerHTML = h;
+}
+$('filas').addEventListener('click',e=>{ const id=e.target.dataset.del; if(id){ state.entries=state.entries.filter(x=>String(x.id)!==id); save(); render(); } });
+$('filas').addEventListener('change',e=>{
+  if(!e.target.classList.contains('q')) return;
+  const v=parseFloat(e.target.value); const en=state.entries.find(x=>String(x.id)===e.target.dataset.id);
+  if(en && v>=0) { en.q=v; save(); } render();
+});
+$('deshacer').addEventListener('click',()=>{ state.entries.pop(); save(); render(); });
+let rTimer=null;
+function rClose(){ $('confirmBox').style.display='none'; clearTimeout(rTimer); }
+$('reset').addEventListener('click',()=>{ $('confirmBox').style.display='flex'; clearTimeout(rTimer); rTimer=setTimeout(rClose,8000); });
+$('rNo').addEventListener('click',rClose);
+$('rYes').addEventListener('click',()=>{ rClose(); archiveDay(); state.date=hoy(); save(); render(); });
+
+// --- peso (no se resetea cada día) ---
+const dayNum = d => { const [y,m,dd]=d.split('-').map(Number); return Date.UTC(y,m-1,dd)/86400000; };
+const shortDate = (d,wd) => { const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString('es-ES', wd?{weekday:'short',day:'numeric',month:'short'}:{day:'numeric',month:'short'}); };
+let wPts = [];
+function wMsg(m){ $('wMsg').textContent=m; setTimeout(()=>{ if($('wMsg').textContent===m) $('wMsg').textContent=''; },3000); }
+function addWeight(){
+  const kg = parseFloat($('wKg').value); let d = $('wDate').value || hoy();
+  if(!(kg>0 && kg<500)){ $('wKg').focus(); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) d = hoy();
+  state.weights = state.weights.filter(x=>x.d!==d); state.weights.push({d, kg});
+  save(); $('wKg').value=''; $('wDate').value=hoy(); render(); wMsg('Guardado: '+fmt(kg,2)+' kg · '+shortDate(d));
+}
+function renderWeight(){
+  const w = state.weights.filter(x=>x && /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.kg>0).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+  const box=$('wChart'), list=$('wList'), info=$('wInfo');
+  wPts = [];
+  if(!w.length){ box.innerHTML='<div class="vacio" style="padding:14px 0">Aún no hay registros de peso</div>'; list.innerHTML=''; info.textContent=''; return; }
+  const W=360, H=190, ml=40, mr=16, mt=18, mb=26;
+  const d0=dayNum(w[0].d), span=dayNum(w[w.length-1].d)-d0;
+  const X = d => span ? ml+(dayNum(d)-d0)/span*(W-ml-mr) : (ml+W-mr)/2;
+  const kgs=w.map(x=>x.kg), mn=Math.min(...kgs), mx=Math.max(...kgs), pad=Math.max((mx-mn)*0.25,0.5), lo=mn-pad, hi=mx+pad;
+  const Y = v => mt+(hi-v)/(hi-lo)*(H-mt-mb);
+  const step=[0.1,0.2,0.5,1,2,5,10,20].find(s=>(hi-lo)/s<=4)||50;
+  let g='';
+  for(let v=Math.ceil(lo/step-1e-9)*step; v<=hi+1e-9; v+=step){
+    v=Math.round(v*100)/100; const y=Y(v).toFixed(1);
+    g+=`<line class="grid" x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}"/><text class="ax" x="${ml-6}" y="${(+y+4).toFixed(1)}" text-anchor="end">${fmt(v,step<1?1:0)}</text>`;
+  }
+  wPts = w.map(x=>({x:X(x.d), y:Y(x.kg), d:x.d, kg:x.kg}));
+  const last=wPts[wPts.length-1], r=w.length>40?2.5:4;
+  const ly = last.y-10<12 ? last.y+20 : last.y-10;
+  const xl = span
+    ? `<text class="ax" x="${ml}" y="${H-6}" text-anchor="start">${shortDate(w[0].d)}</text><text class="ax" x="${W-mr}" y="${H-6}" text-anchor="end">${shortDate(w[w.length-1].d)}</text>`
+    : `<text class="ax" x="${last.x}" y="${H-6}" text-anchor="middle">${shortDate(w[0].d)}</text>`;
+  box.innerHTML = `<div class="wbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico lineal del peso">${g}${xl}
+    <polyline class="ln" points="${wPts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')}"/>
+    <line class="cross" id="wCross" y1="${mt}" y2="${H-mb}" style="display:none"/>
+    ${wPts.map(p=>`<circle class="pt" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}"/>`).join('')}
+    <circle class="pt" id="wHl" r="5.5" style="display:none"/>
+    <text class="lv" x="${last.x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${w.length===1?'middle':'end'}">${fmt(last.kg,2)}</text>
+  </svg><div id="wTip"></div></div>`;
+  const svg=box.querySelector('svg'), tip=$('wTip'), cross=$('wCross'), hl=$('wHl');
+  const show = ev=>{
+    const rc=svg.getBoundingClientRect(), sx=(ev.clientX-rc.left)/rc.width*W;
+    let b=wPts[0]; wPts.forEach(p=>{ if(Math.abs(p.x-sx)<Math.abs(b.x-sx)) b=p; });
+    cross.setAttribute('x1',b.x); cross.setAttribute('x2',b.x); cross.style.display='';
+    hl.setAttribute('cx',b.x); hl.setAttribute('cy',b.y); hl.style.display='';
+    tip.textContent = shortDate(b.d,true)+' · '+fmt(b.kg,2)+' kg'; tip.style.display='block';
+    const px=b.x/W*rc.width; tip.style.left=Math.min(Math.max(px,tip.offsetWidth/2),rc.width-tip.offsetWidth/2)+'px';
+  };
+  const hide = ()=>{ tip.style.display='none'; cross.style.display='none'; hl.style.display='none'; };
+  svg.addEventListener('pointermove',show); svg.addEventListener('pointerdown',show);
+  svg.addEventListener('pointerleave',ev=>{ if(ev.pointerType==='mouse') hide(); });
+  const lw=w[w.length-1]; let t=`Último: <b>${fmt(lw.kg,2)} kg</b> (${shortDate(lw.d)})`;
+  if(w.length>1){ const df=lw.kg-w[0].kg; t+=` · ${df>0?'+':df<0?'−':''}${fmt(Math.abs(df),2)} kg desde el ${shortDate(w[0].d)}`; }
+  info.innerHTML = t;
+  list.innerHTML = w.slice().reverse().map(x=>`<div class="wrow"><span>${shortDate(x.d,true)}</span><span>${fmt(x.kg,2)} kg</span><button class="x" data-wdel="${x.d}" title="Quitar" aria-label="Quitar">×</button></div>`).join('');
+}
+$('wAdd').addEventListener('click',addWeight);
+$('wKg').addEventListener('keydown',e=>{ if(e.key==='Enter') addWeight(); });
+$('wList').addEventListener('click',e=>{ const d=e.target.dataset.wdel; if(d){ state.weights=state.weights.filter(x=>x.d!==d); save(); render(); } });
+
+// --- alimento personalizado ---
+$('cAdd').addEventListener('click',()=>{
+  const n=$('cNom').value.trim(); if(!n){ $('cNom').focus(); return; }
+  const v=id=>Math.max(0,parseFloat($(id).value)||0);
+  state.custom = state.custom.filter(f=>f[0]!==n); state.custom.push([n,v('cCal'),v('cPro'),v('cSal')]); save();
+  ['cNom','cCal','cPro','cSal'].forEach(i=>$(i).value=''); eRefresh(); $('cMsg').textContent='Guardado: '+n; setTimeout(()=>{$('cMsg').textContent=''},3000);
+});
+
+// --- editar / eliminar alimento ---
+let eList=[], eCur=null;
+function eMsg(m){ $('eMsg').textContent=m; setTimeout(()=>{ if($('eMsg').textContent===m) $('eMsg').textContent=''; },3000); }
+function eRefresh(keepKey){
+  eList = allFoods();
+  $('eSel').innerHTML = '<option value="">Elige un alimento…</option>' + eList.map((f,i)=>`<option value="${i}">${esc(f[0])}</option>`).join('');
+  eCur=null; $('eForm').style.display='none'; $('eConfirm').style.display='none'; $('eDel').style.display='';
+  $('eRestoreAll').style.display = state.deleted.length ? '' : 'none';
+  $('eRestoreAll').textContent = 'Restaurar alimentos eliminados ('+state.deleted.length+')';
+  if(sel){ sel=null; $('buscar').value=''; upd(); }
+}
+$('eSel').addEventListener('change',()=>{
+  const i=$('eSel').value; $('eConfirm').style.display='none'; $('eDel').style.display='';
+  if(i===''){ eCur=null; $('eForm').style.display='none'; return; }
+  eCur=eList[+i]; $('eForm').style.display='grid';
+  $('eNom').value=eCur[0]; $('eCal').value=eCur[1]; $('ePro').value=eCur[2]; $('eSal').value=eCur[3];
+  $('eCoste').value=eCur[5];
+  MICROS.forEach((_,k)=>{ $('eM'+k).value=eCur[4][k]; });
+  $('eRestore').style.display = (eCur[6]==='b' && state.edits[eCur[7]]) ? '' : 'none';
+});
+$('eSave').addEventListener('click',()=>{
+  if(!eCur) return; const n=$('eNom').value.trim(); if(!n){ $('eNom').focus(); return; }
+  const v=id=>Math.max(0,parseFloat($(id).value)||0); const nf=[n,v('eCal'),v('ePro'),v('eSal'),MICROS.map((_,k)=>v('eM'+k)),v('eCoste')];
+  if(eCur[6]==='b') state.edits[eCur[7]]=nf;
+  else { const k=state.custom.findIndex(f=>f[0]===eCur[7]); if(k>=0) state.custom[k]=nf; }
+  save(); eRefresh(); render(); eMsg('Cambios guardados: '+n);
+});
+$('eDel').addEventListener('click',()=>{ if(eCur){ $('eConfirm').style.display='flex'; $('eDel').style.display='none'; } });
+$('eNo').addEventListener('click',()=>{ $('eConfirm').style.display='none'; $('eDel').style.display=''; });
+$('eYes').addEventListener('click',()=>{
+  if(!eCur) return; const n=eCur[0];
+  if(eCur[6]==='b'){ if(!state.deleted.includes(eCur[7])) state.deleted.push(eCur[7]); delete state.edits[eCur[7]]; }
+  else state.custom = state.custom.filter(f=>f[0]!==eCur[7]);
+  save(); eRefresh(); eMsg('Eliminado: '+n);
+});
+$('eRestore').addEventListener('click',()=>{ if(eCur && eCur[6]==='b'){ delete state.edits[eCur[7]]; save(); eRefresh(); eMsg('Valores originales restaurados'); } });
+$('eRestoreAll').addEventListener('click',()=>{ state.deleted=[]; save(); eRefresh(); eMsg('Alimentos restaurados'); });
+
+// --- copia de seguridad ---
+function bMsg(m){ $('bMsg').textContent=m; setTimeout(()=>{ if($('bMsg').textContent===m) $('bMsg').textContent=''; },4000); }
+$('bDown').addEventListener('click',()=>{
+  const blob = new Blob([JSON.stringify({app:'contador-calorias',v:1,state})],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'copia-contador-calorias-'+hoy()+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  bMsg('Copia descargada.');
+});
+$('bUp').addEventListener('click',()=>$('bFile').click());
+$('bFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const s=JSON.parse(r.result).state; if(!s||!Array.isArray(s.entries)) throw 0;
+    state=Object.assign({ date: hoy(), entries: [], custom: [], edits: {}, deleted: [], notes: '', days: [], weights: [] }, s); delete state.history; fixState();
+    checkDay(); save(); render(); eRefresh(); $('notas').value=state.notes||''; bMsg('Copia restaurada.');
+  }catch(err){ bMsg('Ese archivo no es una copia válida.'); } e.target.value=''; };
+  r.readAsText(f);
+});
+
+$('eMicros').innerHTML = ORDER.map(i=>`<div><label>${MICROS[i]} /100</label><input type="number" id="eM${i}" min="0" step="any" inputmode="decimal"></div>`).join('');
+$('mTot').innerHTML = ORDER.map(i=>`<div><div class="n" id="mT${i}">0</div><div class="l">${MICROS[i]}</div></div>`).join('');
+$('wDate').value = hoy();
+
+load(); checkDay(); render(); eRefresh(); showSaved();
+$('notas').value = state.notes || '';
+$('notas').addEventListener('input',()=>{ state.notes = $('notas').value; save(); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkDay(); });
+setInterval(checkDay,60000);
+
+// Navegación entre páginas.
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  const target=btn.dataset.tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+target));
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+// Las notas crecen según el texto introducido.
+function resizeNotes(){ const n=$('notas'); n.style.height='auto'; n.style.height=Math.max(380,n.scrollHeight)+'px'; }
+$('notas').addEventListener('input',resizeNotes);
+resizeNotes();
+</script>
+<script>
+// Registra el service worker cuando la app se sirve desde HTTPS o localhost.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
